@@ -1,3 +1,4 @@
+import os
 import struct
 import librosa
 import numpy as np
@@ -5,7 +6,7 @@ import webrtcvad
 import soundfile as sf
 
 
-def slice_voice(voice_file_path):
+def slice_voice(voice_file_path, max_voice_duration=10, min_voice_duration=1):
     slices_dir = "slices"
     y, sr = librosa.load(voice_file_path, sr=16000)
     y = librosa.to_mono(y)
@@ -52,12 +53,29 @@ def slice_voice(voice_file_path):
     if current_segment is not None:
         active_segments.append(tuple(current_segment))
 
+    # 将每个片段长度限制为最大值
+    max_samples = int(max_voice_duration * sr)
+    final_segments = []
+    for segment in active_segments:
+        start, end = segment
+        duration = end - start
+        if duration <= max_samples:
+            final_segments.append(segment)
+        else:
+            num_sub_segments = int(np.ceil(duration / max_samples))
+            sub_segment_size = duration // num_sub_segments
+            for i in range(num_sub_segments):
+                sub_start = start + i * sub_segment_size
+                sub_end = min(sub_start + sub_segment_size, end)
+                final_segments.append((sub_start, sub_end))
+
     # 保存活动部分为.wav文件
+    os.makedirs(slices_dir, exist_ok=True)
     num = 0
-    for i, segment in enumerate(active_segments):
+    for i, segment in enumerate(final_segments):
         start, end = segment
         # Skip short segments
-        if end - start < sr:
+        if end - start < sr * min_voice_duration:
             continue
         num += 1
         segment_audio = y[start:end]

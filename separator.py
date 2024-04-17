@@ -1,3 +1,5 @@
+import os
+
 import demucs.api
 
 
@@ -6,6 +8,7 @@ def separate_voice(audio_file_path):
 
     origin, separated = separator.separate_audio_file(audio_file_path)
 
+    os.makedirs("stems", exist_ok=True)
     for stem, source in separated.items():
         # drums, bass, other, vocals
         print(f"Saving {stem}")
