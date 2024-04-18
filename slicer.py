@@ -6,8 +6,9 @@ import webrtcvad
 import soundfile as sf
 
 
-def slice_voice(voice_file_path, max_voice_duration=10, min_voice_duration=1):
-    slices_dir = "slices"
+def slice_voice(voice_file_path, output_folder, max_voice_duration=10, min_voice_duration=1):
+    print(f"Slicing voice from {voice_file_path}")
+    slices_dir = f"{output_folder}/slices"
     y, sr = librosa.load(voice_file_path, sr=16000)
     y = librosa.to_mono(y)
 
